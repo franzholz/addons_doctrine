@@ -1,0 +1,64 @@
+{
+    "name": "jambagecom/addons-doctrine",
+    "description": "This brings DoctrineExtensions to TYPO3.",
+    "type": "typo3-cms-extension",
+    "license": "GPL-2.0-or-later",
+    "authors": [
+        {
+            "name": "Franz Holzinger",
+            "email": "franz@ttproducts.de"
+        }
+    ],
+    "require": {
+        "typo3/cms-core": "^12.4 || ^13.4",
+		"beberlei/doctrineextensions": "^1.5.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Jambagecom\\AddonsDoctrine\\": "Classes/"
+        }
+    },
+    "config": {
+		"vendor-dir": ".Build/vendor",
+		"bin-dir": ".Build/bin",
+        "allow-plugins": {
+            "typo3/class-alias-loader": true,
+            "typo3/cms-composer-installers": true
+        },
+        "sort-packages": true,
+		"classmap-authoritative": true,
+		"prepend-autoloader": false
+    },
+    "extra": {
+        "typo3/cms": {
+            "extension-key": "addons_doctrine"
+        }
+    },
+	"scripts": {
+		"post-autoload-dump": [
+			"mkdir -p .Build/Web/typo3conf/ext/",
+			"[ -L .Build/Web/typo3conf/ext/addons_doctrine ] || ln -snvf ../../../../. .Build/Web/typo3conf/ext/addons_doctrine"
+		],
+		"extension-create-libs": [
+			"mkdir -p Libraries/temp",
+			"[ -f $(composer config --global home)/vendor/bin/phar-composer ] || composer global require clue/phar-composer",
+			"if [ ! -f Libraries/doctrine-extensions.phar ]; then cd Libraries/temp && composer require beberlei/doctrineextensions=^1.5.0 && composer config classmap-authoritative true && composer config prepend-autoloader false && composer dump-autoload; fi",
+			"[ -f Libraries/doctrine-extensions.phar ] || $(composer config --global home)/vendor/bin/phar-composer build Libraries/temp/ Libraries/doctrine-extensions.phar",
+			"chmod -x Libraries/*.phar",
+			"rm -rf Libraries/temp"
+		],
+		"extension-build": [
+			"@extension-create-libs"
+		],
+		"extension-release": [
+			"@extension-build",
+			"rm -rf Tests/",
+			"rm -f .editorconfig",
+			"rm -f .gitattributes",
+			"rm -f .gitignore"
+		],
+		"extension-clean": [
+			"rm -rf Libraries"
+		]
+	}
+}
